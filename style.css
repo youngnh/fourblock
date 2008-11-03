@@ -1,0 +1,31 @@
+#board {
+  position: absolute;
+  height: 360px;
+  width: 200px;
+  top: 40px;
+  left: 40px;
+  border-bottom : solid medium black;
+  border-left : solid medium black;
+  border-right : solid medium black;
+}
+
+#next {
+  position: absolute;
+  height: 80px;
+  width: 120px;
+  top: 100px;
+  left: 280px;
+  border: solid medium black;
+}
+
+#lines {
+  position: absolute;
+  top: 40px;
+  left: 280px;
+}
+
+.block {
+  position: absolute;
+  height: 20px;
+  width: 20px;
+}
