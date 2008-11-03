@@ -32,7 +32,7 @@ RZEE = 3;
 LZEE = 4;
 RELL = 5;
 LELL = 6;
-
+piece_colors = ["yellow", "purple", "lightblue", "green", "red", "orange", "blue"];
 init_positions = [         //intial positions of blocks, with center block first
                   [[5,17], //square - 0
                    [6,17],
@@ -108,10 +108,11 @@ function Piece(type) {
 }
 
 //construct a single div element
-function createblock() {
+function createblock(type) {
     var blk = document.createElement("div");
     blk.className = "block";
-    blk.style.backgroundColor = "red";
+
+    blk.style.backgroundColor = piece_colors[type];
 
     return blk;
 }
@@ -358,7 +359,7 @@ function clearline(row, board) {
 
 //returns a random Piece object
 function nextpiece() {
-    var p = Math.floor(Math.random(seed) * 6.0);
+    var p = Math.floor(Math.random(seed) * 7.0);
     seed = Math.floor(Math.random(seed) * 1200000000);
     return new Piece(p);
 }
@@ -397,7 +398,7 @@ function previewplace() {
     var blkpos = prev_positions[piece.type];
 
     function blockcreate(pos) {
-        var blk = createblock();
+        var blk = createblock(piece.type);
         blk.x = pos[0];
         blk.y = pos[1];
         piece.addBlock(blk);
