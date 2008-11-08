@@ -3,7 +3,9 @@
 gameloop = false;       //will hold closure to call at intervals
 endgame = false;        //will hold id of interval, so it can be cleared
 
-seed = 314;             //seed number for random number generator
+seed = new Date().getTime(); // piece sequence seed
+random = new Random(seed);  //seeded random number generator
+
 
 board_height = 18;      //height in grid units of board
 board_width = 10;       //width in grid units of board
@@ -93,7 +95,7 @@ prev_positions = [         //initial positions of preview pieces
                    [1,2],
                    [3,2],
                    [3,1]]
-];                  
+];
 
 //
 //end of global variables section
@@ -290,7 +292,7 @@ function rotateccw(piece, board) {
         drawonboard(piece);
 }
 
-//checks the entire board for any 
+//checks the entire board for any
 //completed lines and executes the
 //given handler for it
 function fulline(board, clearfn) {
@@ -334,13 +336,13 @@ function nextlevel() {
 }
 
 function clearallines(rows, board) {
-    //clear from the top down    
+    //clear from the top down
     rows.sort(function(a,b){return b - a;});  //sort into reverse order
     for(var r = 0; r < rows.length; r++)
         clearline(rows[r], board);
 }
 
-function clearline(row, board) { 
+function clearline(row, board) {
     lines++;
     updatelines(lines);
 
@@ -359,8 +361,7 @@ function clearline(row, board) {
 
 //returns a random Piece object
 function nextpiece() {
-    var p = Math.floor(Math.random(seed) * 7.0);
-    seed = Math.floor(Math.random(seed) * 1200000000);
+    var p = random.nextInt(7);
     return new Piece(p);
 }
 
@@ -373,7 +374,7 @@ function initialplace(piece, board) {
     //check that positions are available
     if(!checkposset(blkpos, board))
         return false;
-    
+
     function setblkpos(blk, pos) {
         blk.x = pos[0];
         blk.y = pos[1];
@@ -439,7 +440,7 @@ function startgame() {
     }
 
     gameloop = falloop;
-    
+
     endgame = setInterval("gameloop()", 1000/level_timing[0]);
 }
 
