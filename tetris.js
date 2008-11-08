@@ -27,6 +27,39 @@ glbl_board = false;     //global board variable
 current_piece = false;  //user-manipulable currently-falling piece
 next_piece = false;     //the next piece
 
+// keymaps
+var arrowkeymap = {
+    37: shiftleft,
+    39: shiftright,
+    40: fall,
+    32: plummet,
+    38: rotatecw
+};
+
+var ijklmap = {
+    74: shiftleft,  // j
+    76: shiftright, // l
+    75: fall,       // k
+    79: plummet,    // o
+    73: rotatecw    // i
+};
+
+var combinedmap = {
+    37: shiftleft,   // <-
+    74: shiftleft,   // j
+    39: shiftright,  // ->
+    76: shiftright,  // l
+    40: fall,        // \/
+    75: fall,        // k
+    79: plummet,     // o
+    32: plummet,     // <space>
+    38: rotatecw,    // ^
+    73: rotatecw,    // i
+    85: rotateccw,   // u
+};
+
+current_keymap = arrowkeymap; // default keymap
+
 SQUARE = 0;             //piece types
 TEE = 1;
 STRAIGHT = 2;
@@ -423,7 +456,7 @@ function startgame() {
 
     document.onkeydown = function(event) {
         var code = window.event ? window.event.keyCode : event.which;
-        arrowkeymap(code);
+        keyhandler(code);
     };
 
     function falloop() {
@@ -449,80 +482,10 @@ function gameover() {
     alert("Game Over.");
 }
 
-function arrowkeymap(keycode) {
-    //shift left
-    if(keycode == 37) //left arrow
-        shiftleft(current_piece, glbl_board);
-
-    //shift right
-    if(keycode == 39) //right arrow
-        shiftright(current_piece, glbl_board);
-
-    //fall
-    if(keycode == 40) //down arrow
-        fall(current_piece, glbl_board);
-
-    //plummet
-    if(keycode == 32) //space
-        plummet(current_piece, glbl_board);
-
-    //rotate clockwise
-    if(keycode == 38) //up arrow
-        rotatecw(current_piece, glbl_board);
-}
-
-function ijklkeymap(keycode) {
-    //shift left
-    if(keycode == 74) // j
-        shiftleft(current_piece, glbl_board);
-
-    //shift right
-    if(keycode == 76) // l
-        shiftright(current_piece, glbl_board);
-
-    //fall
-    if(keycode == 75) // k
-        fall(current_piece, glbl_board);
-
-    //plummet
-    if(keycode == 79) // o
-        plummet(current_piece, glbl_board);
-
-    //rotate clockwise
-    if(keycode == 73) // i
-        rotatecw(current_piece, glbl_board);
-}
-
 function keyhandler(keycode) {
-    //shift left (left arrow/j)
-    if(keycode == 37 || keycode == 74) {
-        shiftleft(current_piece, glbl_board);
-    }
-
-    //rotate clockwise (up arrow/i)
-    if(keycode == 38 || keycode == 73) {
-        rotatecw(current_piece, glbl_board);
-    }
-
-    //shift right (right arrow/l)
-    if(keycode == 39 || keycode == 76) {
-        shiftright(current_piece, glbl_board);
-    }
-
-    //fall current_piece (down arrow/k)
-    if(keycode == 40 || keycode == 75) {
-        fall(current_piece, glbl_board);
-    }
-
-    //plummet current_piece (o)
-    if(keycode == 79) {
-        plummet(current_piece, glbl_board);
-    }
-
-    //rotate counterclockwise (u)
-    if(keycode == 85) {
-        rotateccw(current_piece, glbl_board);
-    }
+    var fn = current_keymap[keycode];
+    if(fn)
+        fn(current_piece, glbl_board);
 }
 
 function updatelines(lines) {
