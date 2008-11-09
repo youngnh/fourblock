@@ -1,5 +1,5 @@
-function GameBoard(id, seed, keymap, opponent) {
-    this.opponent = opponent;
+function GameBoard(id, seed, keymap, name) {
+    this.name = name;
 
     this.random = new Random(seed);
     this.board = createboard();
@@ -155,13 +155,20 @@ GameBoard.prototype.dropabove = function(row) {
     translatePos(allabove, this.board_top, this.board_left, board_height);
 };
 
-GameBoard.prototype.gameover = function() {
+GameBoard.prototype.gameover = function(winner) {
     clearInterval(this.endgame);
+    if(!winner)
+        this.opponent.gameover(true);
     var div = document.createElement("div");
     div.className = "overlay";
     div.style.left = this.board_left - 5;
     var p = document.createElement("p");
-    p.appendChild(document.createTextNode("You Lose! " + this.opponent + " Wins!"));
+    var text;
+    if(winner)
+        text = "You Win!";
+    else
+        text = "You Lose! " + this.opponent.name + " Wins!";
+    p.appendChild(document.createTextNode(text));
     div.appendChild(p);
     document.body.appendChild(div);
 };
