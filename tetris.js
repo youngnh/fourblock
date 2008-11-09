@@ -331,6 +331,7 @@ function falloop(gb) {
         gb.current_piece = gb.next_piece;
         gb.current_piece.board = gb;
         if(!gb.initialplace(gb.current_piece, gb.board)) { //if this fails, the player loses
+            gb.gameover();
             return;
         }
         gb.next_piece = gb.previewplace();

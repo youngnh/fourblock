@@ -152,3 +152,10 @@ GameBoard.prototype.dropabove = function(row) {
     //draw the newly positioned blocks
     translatePos(allabove, this.board_top, this.board_left, board_height);
 };
+
+GameBoard.prototype.gameover = function() {
+    var div = document.createElement("div");
+    div.className = "overlay";
+    div.style.left = this.board_left - 5;
+    document.body.appendChild(div);
+};
