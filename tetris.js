@@ -1,12 +1,5 @@
 //global variables section
 //
-gameloop = false;       //will hold closure to call at intervals
-endgame = false;        //will hold id of interval, so it can be cleared
-
-seed = new Date().getTime(); // piece sequence seed
-random = new Random(seed);  //seeded random number generator
-
-
 board_height = 18;      //height in grid units of board
 board_width = 10;       //width in grid units of board
 prev_height = 4;        //height in grid units of preview pane
@@ -14,21 +7,11 @@ prev_width = 6;         //width in grid units of preview pane
 
 glbl_width = 20;        //width of block
 border_width = 3;       //width of border around board
-board_top = 40;         //top offset of board
-board_left = 40;        //left offset of board
-prev_top = 100;          //top offset of preview box
-prev_left = 280;        //left offset of preview box
 
-level = 0;              //keeps track of the player's level
-lines = 0;              //number of lines a player has cleared
 level_timing = [2, 4, 6, 8, 10, 12, 14, 16, 18, 32, 64];  //number of times per second a block falls
 
-glbl_board = false;     //global board variable
-current_piece = false;  //user-manipulable currently-falling piece
-next_piece = false;     //the next piece
-
 // keymaps
-var arrowkeymap = {
+arrowkeymap = {
     37: shiftleft,
     39: shiftright,
     40: fall,
@@ -36,7 +19,7 @@ var arrowkeymap = {
     38: rotatecw
 };
 
-var ijklmap = {
+ijklmap = {
     74: shiftleft,  // j
     76: shiftright, // l
     75: fall,       // k
@@ -44,7 +27,15 @@ var ijklmap = {
     73: rotatecw    // i
 };
 
-var combinedmap = {
+wasdmap = {
+    65: shiftleft,  // a
+    68: shiftright, // d
+    83: fall,       // s
+    69: plummet,    // e
+    87: rotatecw    // w
+};
+
+combinedmap = {
     37: shiftleft,   // <-
     74: shiftleft,   // j
     39: shiftright,  // ->
@@ -58,9 +49,7 @@ var combinedmap = {
     85: rotateccw,   // u
 };
 
-current_keymap = arrowkeymap; // default keymap
-
-SQUARE = 0;             //piece types
+SQUARE = 0;                //piece types
 TEE = 1;
 STRAIGHT = 2;
 RZEE = 3;
@@ -172,14 +161,6 @@ function translatePos(blocks, top_offset, left_offset, grid_height) {
     }
 }
 
-function drawonboard(piece) {
-    translatePos(piece.blocks, board_top, board_left, board_height);
-}
-
-function drawinpreview(piece) {
-    translatePos(piece.blocks, prev_top, prev_left, prev_height);
-}
-
 //checks a grid position for out of bounds
 //or already containg a block
 function blocklegal(x, y, board) {
@@ -223,7 +204,7 @@ function fall(piece, board) {
     var fell = checkandset(piece, map(onebelow, piece.blocks), board);
 
     if(fell)
-        drawonboard(piece);
+        piece.board.drawonboard(piece);
 
     return fell;
 }
@@ -249,7 +230,7 @@ function plummet(piece, board) {
         }
         depth++;
     }
-    drawonboard(piece);
+    piece.board.drawonboard(piece);
 }
 
 //transfers a movable piece onto
@@ -271,7 +252,7 @@ function shift(dist, piece, board) {
     var shifted = checkandset(piece, map(hshift, piece.blocks), board);
 
     if(shifted)
-        drawonboard(piece);
+        piece.board.drawonboard(piece);
 }
 
 function shiftleft(piece, board) {
@@ -307,7 +288,7 @@ function rotatecw(piece, board) {
     var rotated = checkandset(piece, map(rotcoord, piece.blocks), board);
 
     if(rotated)
-        drawonboard(piece);
+        piece.board.drawonboard(piece);
 }
 
 //rotates a piece 90 deg. counterclockwise
@@ -343,153 +324,22 @@ function fulline(board, clearfn) {
     clearfn(toclear, board);
 }
 
-function dropabove(row, board) {
-    //collect all blocks above row
-    function findblk(blk) {
-        return blk ? blk.y > row : false;
+function falloop(gb) {
+    if(!fall(gb.current_piece, gb.board)) {
+        settle(gb.current_piece, gb.board);
+        fulline(gb.board, function(rows, board) { gb.clearallines(rows); });
+        gb.current_piece = gb.next_piece;
+        gb.current_piece.board = gb;
+        if(!gb.initialplace(gb.current_piece, gb.board)) { //if this fails, the player loses
+            return;
+        }
+        gb.next_piece = gb.previewplace();
     }
-    var allabove = rfilter(findblk, board);
-
-    //drop all by one unit
-    function boarddown(blk) {
-        board[blk.x][blk.y] = false;
-        blk.y -= 1;
-        board[blk.x][blk.y] = blk;
-    }
-    map(boarddown, allabove);
-
-    //draw the newly positioned blocks
-    translatePos(allabove, board_top, board_left, board_height);
-}
-
-function nextlevel() {
-    level++;
-    clearInterval(endgame);
-    endgame = setInterval("gameloop()", 1000/level_timing[level]);
-}
-
-function clearallines(rows, board) {
-    //clear from the top down
-    rows.sort(function(a,b){return b - a;});  //sort into reverse order
-    for(var r = 0; r < rows.length; r++)
-        clearline(rows[r], board);
-}
-
-function clearline(row, board) {
-    lines++;
-    updatelines(lines);
-
-    //remove blocks from board
-    for(var col = 0; col < board_width; col++) {
-        var blk = board[col][row]
-        board[col][row] = false;
-        document.body.removeChild(blk);
-    }
-
-    dropabove(row, board);
-
-    if(lines > 1 && lines % 10 == 0)
-        nextlevel();
-}
-
-//returns a random Piece object
-function nextpiece() {
-    var p = random.nextInt(7);
-    return new Piece(p);
-}
-
-//tries to put a pieces blocks in their initial positions
-//will return false if not possible, true otherwise
-function initialplace(piece, board) {
-    //get initial positions for piece type
-    var blkpos = init_positions[piece.type];
-
-    //check that positions are available
-    if(!checkposset(blkpos, board))
-        return false;
-
-    function setblkpos(blk, pos) {
-        blk.x = pos[0];
-        blk.y = pos[1];
-    }
-
-    map(setblkpos, piece.blocks, blkpos);
-
-    drawonboard(piece);
-
-    return true;
-}
-
-//gets the next piece type,
-//creates its blocks
-//draws them in the preview box
-//and returns the piece
-function previewplace() {
-    //get next piece from random sequence
-    var piece = nextpiece();
-
-    //get preview positions for piece type
-    var blkpos = prev_positions[piece.type];
-
-    function blockcreate(pos) {
-        var blk = createblock(piece.type);
-        blk.x = pos[0];
-        blk.y = pos[1];
-        piece.addBlock(blk);
-        document.body.appendChild(blk);
-    }
-
-    //map creation function across initial positions
-    map(blockcreate, blkpos);
-    piece.center = piece.blocks[0];
-
-    drawinpreview(piece);
-
-    return piece;
 }
 
 function startgame() {
-    glbl_board = createboard();
-    current_piece = previewplace();
-    initialplace(current_piece, glbl_board);
-    next_piece = previewplace();
+    var seed = new Date().getTime();
 
-    document.onkeydown = function(event) {
-        var code = window.event ? window.event.keyCode : event.which;
-        keyhandler(code);
-    };
-
-    function falloop() {
-        if(!fall(current_piece, glbl_board)) {
-            settle(current_piece, glbl_board);
-            fulline(glbl_board, clearallines);
-            current_piece = next_piece;
-            if(!initialplace(current_piece, glbl_board)) { //if this fails, the player loses
-                gameover();
-                return;
-            }
-            next_piece = previewplace();
-        }
-    }
-
-    gameloop = falloop;
-
-    endgame = setInterval("gameloop()", 1000/level_timing[0]);
-}
-
-function gameover() {
-    clearInterval(endgame);
-    alert("Game Over.");
-}
-
-function keyhandler(keycode) {
-    var fn = current_keymap[keycode];
-    if(fn)
-        fn(current_piece, glbl_board);
-}
-
-function updatelines(lines) {
-    var span = document.getElementById("lines");
-    var text = document.createTextNode("" + lines);
-    span.replaceChild(text, span.firstChild);
+    var plr = new GameBoard('plr', seed, wasdmap);
+    var oppo = new GameBoard('oppo', seed, arrowkeymap);
 }
