@@ -45,6 +45,19 @@
   left: 680px;
 }
 
+.name {
+  position: absolute;
+  top: 420px;
+}
+
+#plr_name {
+  left: 40px;
+}
+
+#oppo_name {
+  left: 440px;
+}
+
 .block {
   position: absolute;
   height: 20px;
