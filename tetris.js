@@ -341,6 +341,8 @@ function falloop(gb) {
 function startgame() {
     var seed = new Date().getTime();
 
-    var plr = new GameBoard('plr', seed, wasdmap);
-    var oppo = new GameBoard('oppo', seed, arrowkeymap);
+    var plrname = document.getElementById("plr_name").value;
+    var opponame = document.getElementById("oppo_name").value;
+    var plr = new GameBoard('plr', seed, wasdmap, opponame);
+    var oppo = new GameBoard('oppo', seed, arrowkeymap, plrname);
 }

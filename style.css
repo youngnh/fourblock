@@ -1,3 +1,7 @@
+body {
+  font-family: sans-serif;
+}
+
 .board {
   position: absolute;
   top: 40px;
@@ -75,4 +79,12 @@
   -moz-border-radius-topleft: 5px;
   -moz-border-radius-topright: 5px;
   z-index: 50;
+  text-align: center;
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.overlay p {
+  position: relative;
+  top: 150px;
 }
