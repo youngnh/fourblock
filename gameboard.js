@@ -25,26 +25,31 @@ GameBoard.prototype.setupOffsets = function(id) {
 
     this.lines_span = document.getElementById(id + "_lines");
 };
+
 GameBoard.prototype.setupHandlers = function() {
     var handler = function(gb) {
         return function(event) { gb.keyhandler(event.which); };
     }(this);
     document.addEventListener('keydown', handler, false);
 };
+
 GameBoard.prototype.keyhandler = function(keycode) {
     var fn = this.keymap[keycode];
     if(fn)
         fn(this.current_piece, this.board);
 };
+
 GameBoard.prototype.setupPieces = function() {
     this.current_piece = this.previewplace();
     this.current_piece.board = this;
     this.initialplace(this.current_piece);
     this.next_piece = this.previewplace();
 };
+
 GameBoard.prototype.drawonboard = function(piece) {
     translatePos(piece.blocks, this.board_top, this.board_left, board_height);
 };
+
 GameBoard.prototype.drawinpreview = function(piece) {
     translatePos(piece.blocks, this.prev_top, this.prev_left, prev_height);
 };
@@ -70,7 +75,6 @@ GameBoard.prototype.initialplace = function(piece) {
 
     return true;
 };
-
 
 //gets the next piece type,
 //creates its blocks
@@ -99,16 +103,21 @@ GameBoard.prototype.previewplace = function() {
 
     return piece;
 };
+
 GameBoard.prototype.nextpiece = function() {
     var p = this.random.nextInt(7);
     return new Piece(p);
 };
+
 GameBoard.prototype.clearallines = function(rows) {
     //clear from the top down
+    var count = 0;
     rows.sort(function(a,b){return b - a;});  //sort into reverse order
-    for(var r = 0; r < rows.length; r++)
+    for(var r = 0; r < rows.length; r++, count++)
         this.clearline(rows[r]);
+    return count;
 };
+
 GameBoard.prototype.clearline = function(row) {
     this.lines++;
     this.updatelines(this.lines);
@@ -125,16 +134,27 @@ GameBoard.prototype.clearline = function(row) {
     if(this.lines % 10 == 0)
         this.nextlevel();
 };
+
 GameBoard.prototype.updatelines = function(lines) {
     var text = document.createTextNode("" + lines);
     this.lines_span.replaceChild(text, this.lines_span.firstChild);
 };
+
 GameBoard.prototype.nextlevel = function() {
+    this.pause();
     this.level++;
+    this.resume();
+};
+
+GameBoard.prototype.pause = function() {
     clearInterval(this.endgame);
+};
+
+GameBoard.prototype.resume = function() {
     var loop = function(gb) { return function(){falloop(gb);}; }(this);
     this.endgame = setInterval(loop, 1000/level_timing[this.level]);
 };
+
 GameBoard.prototype.dropabove = function(row) {
     //collect all blocks above row
     function findblk(blk) {
@@ -153,6 +173,48 @@ GameBoard.prototype.dropabove = function(row) {
 
     //draw the newly positioned blocks
     translatePos(allabove, this.board_top, this.board_left, board_height);
+};
+
+GameBoard.prototype.pushuplines = function(n) {
+    //collect all blocks
+    var allblocks = rfilter(function(x){return x;}, this.board);
+
+    //move all blocks up by n lines
+    var board = this.board;
+    function boardup(blk) {
+        board[blk.x][blk.y] = false;
+        blk.y += n;
+        board[blk.x][blk.y] = blk;
+    }
+    map(boardup, allblocks);
+
+    // as many holes as lines you are adding to the board
+    // add junk blocks to each column except at holes
+    function inarr(x, arr) {
+        for(var i = 0; i < arr.length; i++)
+            if(x == arr[i])
+                return true;
+        return false;
+    }
+
+    var r = new Random(new Date().getTime());
+    for(var i = 0; i < n; i++) {
+        var hole = r.nextInt(board_width);
+        //add a single line of gray blocks to the bottom of board with one hole in it
+        for(var col = 0; col < board_width; col++) {
+            if(col != hole) {
+                var blk = createblock(JUNK);
+                this.board[col][i] = blk;
+                blk.x = col;
+                blk.y = i;
+                allblocks.push(blk);
+                document.body.appendChild(blk);
+            }
+        }
+    }
+
+    //draw the entire board
+    translatePos(allblocks, this.board_top, this.board_left, board_height);
 };
 
 GameBoard.prototype.gameover = function(winner) {

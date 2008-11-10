@@ -46,7 +46,7 @@ combinedmap = {
     32: plummet,     // <space>
     38: rotatecw,    // ^
     73: rotatecw,    // i
-    85: rotateccw,   // u
+    85: rotateccw    // u
 };
 
 SQUARE = 0;                //piece types
@@ -56,7 +56,8 @@ RZEE = 3;
 LZEE = 4;
 RELL = 5;
 LELL = 6;
-piece_colors = ["yellow", "purple", "lightblue", "green", "red", "orange", "blue"];
+JUNK = 7;
+piece_colors = ["yellow", "purple", "lightblue", "green", "red", "orange", "blue", "gray"];
 init_positions = [         //intial positions of blocks, with center block first
                   [[5,17], //square - 0
                    [6,17],
@@ -324,10 +325,21 @@ function fulline(board, clearfn) {
     clearfn(toclear, board);
 }
 
+function makeclearfn(gb) {
+    return function(rows, board) {
+        var cleared = gb.clearallines(rows);
+        if(cleared > 1) {
+//             gb.opponent.pause();
+//             gb.opponent.pushuplines(n - 1);
+//             gb.opponent.resume();
+        }
+    };
+}
+
 function falloop(gb) {
     if(!fall(gb.current_piece, gb.board)) {
         settle(gb.current_piece, gb.board);
-        fulline(gb.board, function(rows, board) { gb.clearallines(rows); });
+        fulline(gb.board, makeclearfn(gb));
         gb.current_piece = gb.next_piece;
         gb.current_piece.board = gb;
         if(!gb.initialplace(gb.current_piece, gb.board)) { //if this fails, the player loses
@@ -346,6 +358,7 @@ function startgame() {
     var plr = new GameBoard('plr', seed, wasdmap, plrname);
     var oppo = new GameBoard('oppo', seed, arrowkeymap, opponame);
 
+    // add opponent
     plr.opponent = oppo;
     oppo.opponent = plr;
 }
